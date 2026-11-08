@@ -42,7 +42,12 @@ def get_info():
         'quiet': True,
         'extract_flat': False,
         'no_warnings': True,
-        'ffmpeg_location': FFMPEG_PATH
+        'ffmpeg_location': FFMPEG_PATH,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'web']
+            }
+        }
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -107,6 +112,11 @@ def download():
             'format': format_id,
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web']
+                }
+            },
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -118,6 +128,11 @@ def download():
             'format': f"{format_id}+bestaudio/best",
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web']
+                }
+            },
             'merge_output_format': 'mp4'
         }
 
@@ -147,6 +162,5 @@ def download():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
-# Variável global para o Render / Gunicorn detetar a aplicação Flask
+# Obrigatório para o Render / Gunicorn detetar a aplicação Flask corretamente
 hugs_app = app
-    
