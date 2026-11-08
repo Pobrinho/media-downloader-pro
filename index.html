@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Downloader Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #05070c;
+            --card-bg: rgba(18, 24, 38, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary-glow: #ff0055;
+            --primary-gradient: linear-gradient(135deg, #ff0055 0%, #ff5000 50%, #7928ca 100%);
+            --accent-green: #00e676;
+            --accent-green-gradient: linear-gradient(135deg, #00e676 0%, #00b0ff 100%);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --input-bg: rgba(8, 12, 20, 0.65);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 0, 85, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 176, 255, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(121, 40, 202, 0.1) 0%, transparent 50%);
+            background-size: 200% 200%;
+            animation: gradientAnimation 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container { width: 100%; max-width: 680px; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            padding: 45px 40px;
+            border-radius: 28px;
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: cardAppear 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(25px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .header { text-align: center; margin-bottom: 35px; }
+        
+        .logo-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 0, 85, 0.1);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            border-radius: 20px;
+            margin-bottom: 18px;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.25);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 35px rgba(255, 0, 85, 0.4); }
+        }
+
+        .logo-icon {
+            font-size: 36px;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Efeito Animado Exclusivo para o Título */
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #fff, #ff0055, #00b0ff, #fff);
+            background-size: 300% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shineTitle 6s linear infinite;
+        }
+
+        @keyframes shineTitle {
+            to { background-position: 300% center; }
+        }
+
+        .header p { color: var(--text-sub); font-size: 14px; font-weight: 400; }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i.fa-link {
+            position: absolute;
+            left: 18px;
+            color: var(--text-sub);
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 45px 16px 48px;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            font-size: 15px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        input[type="text"]:focus {
+            border-color: rgba(255, 0, 85, 0.7);
+            box-shadow: 0 0 0 4px rgba(255, 0, 85, 0.2), inset 0 2px 5px rgba(0,0,0,0.4);
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+        .clear-btn:hover { color: #fff; }
+
+        .btn-search {
+            padding: 0 28px;
+            height: 54px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 25px rgba(255, 0, 85, 0.35);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-search:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(255, 0, 85, 0.55); }
+        .btn-search:active { transform: translateY(0); }
+
+        .loading-container { text-align: center; padding: 25px; display: none; color: var(--text-sub); }
+        .spinner {
+            width: 44px; height: 44px; border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #ff0055; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 12px auto;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .info-box { display: none; border-top: 1px solid var(--card-border); padding-top: 28px; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .video-preview {
+            display: flex; gap: 18px; background: rgba(8, 12, 20, 0.6);
+            padding: 16px; border-radius: 18px; border: 1px solid var(--card-border);
+            align-items: center; margin-bottom: 22px;
+        }
+
+        .thumb-container { position: relative; width: 130px; height: 75px; flex-shrink: 0; border-radius: 12px; overflow: hidden; }
+        .thumbnail { width: 100%; height: 100%; object-fit: cover; }
+        .badge-duration {
+            position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.85);
+            color: #fff; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 6px;
+        }
+
+        .video-details h3 {
+            font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text-main);
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 6px;
+        }
+        .video-details p { font-size: 12px; color: var(--accent-green); font-weight: 500; }
+
+        .form-group { margin-bottom: 22px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 12px; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .select-wrapper { position: relative; }
+        select {
+            width: 100%; padding: 16px; background: var(--input-bg);
+            border: 1px solid var(--card-border); border-radius: 16px; font-size: 14px;
+            color: var(--text-main); outline: none; cursor: pointer; appearance: none;
+            transition: border-color 0.3s;
+        }
+        select:focus { border-color: var(--accent-green); }
+        .select-wrapper::after {
+            content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--text-sub); pointer-events: none;
+        }
+
+        .progress-container {
+            display: none;
+            margin-bottom: 22px;
+            background: rgba(8, 12, 20, 0.7);
+            padding: 18px;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent-green-gradient);
+            transition: width 0.3s ease;
+        }
+
+        .download-btn {
+            width: 100%; padding: 18px; background: var(--accent-green-gradient);
+            color: #05070c; border: none; border-radius: 16px; font-size: 16px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 10px 25px rgba(0, 230, 118, 0.3); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0, 230, 118, 0.5); }
+        .download-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; transform: none; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <div class="logo-wrapper">
+                <i class="fa-brands fa-youtube logo-icon"></i>
+            </div>
+            <h1>Media Downloader Pro</h1>
+            <p>Baixe vídeos e áudios com nome automático e status em tempo real<p>Fabiio_Rodrighues</p>
+        </div>
+
+        <div class="search-box">
+            <div class="input-wrapper">
+                <input type="text" id="videoUrl" placeholder="Cole a URL do YouTube aqui..." oninput="toggleClearBtn()">
+                <i class="fa-solid fa-link"></i>
+                <button id="clearBtn" class="clear-btn" onclick="clearInput()" title="Limpar link"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <button class="btn-search" onclick="fetchInfo()">
+                <span>Buscar</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div id="loadingMsg" class="loading-container">
+            <div class="spinner"></div>
+            <span>Analisando o vídeo...</span>
+        </div>
+
+        <div id="infoBox" class="info-box">
+            <div class="video-preview">
+                <div class="thumb-container">
+                    <img id="videoThumb" class="thumbnail" src="" alt="Thumbnail">
+                    <span id="videoDuration" class="badge-duration">00:00</span>
+                </div>
+                <div class="video-details">
+                    <h3 id="videoTitle">Título do Vídeo</h3>
+                    <p><i class="fa-solid fa-check-circle"></i> Pronto para baixar</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="formatSelect"><i class="fa-solid fa-sliders"></i> Selecione o Formato e Qualidade:</label>
+                <div class="select-wrapper">
+                    <select id="formatSelect"></select>
+                </div>
+            </div>
+
+            <div id="progressContainer" class="progress-container">
+                <div class="progress-info">
+                    <span id="progressStatus">Preparando download...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progressBarFill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+            
+            <button id="downloadBtn" class="download-btn" onclick="startDownload()">
+                <i class="fa-solid fa-download"></i>
+                <span id="btnText">Baixar Arquivo Agora</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUrl = '';
+
+function toggleClearBtn() {
+    const input = document.getElementById('videoUrl');
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.style.display = input.value.trim().length > 0 ? 'block' : 'none';
+}
+
+function clearInput() {
+    const input = document.getElementById('videoUrl');
+    input.value = '';
+    toggleClearBtn();
+    document.getElementById('infoBox').style.display = 'none';
+    input.focus();
+}
+
+async function fetchInfo() {
+    const url = document.getElementById('videoUrl').value.trim();
+    if (!url) {
+        alert('Por favor, insira o link de um vídeo do YouTube!');
+        return;
+    }
+
+    currentUrl = url;
+    document.getElementById('infoBox').style.display = 'none';
+    document.getElementById('loadingMsg').style.display = 'block';
+
+    try {
+        const response = await fetch('/get-info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+        });
+
+        const data = await response.json();
+        document.getElementById('loadingMsg').style.display = 'none';
+
+        if (!response.ok || data.error) {
+            alert('Erro: ' + (data.error || 'Não foi possível buscar as informações.'));
+            return;
+        }
+
+        document.getElementById('videoTitle').innerText = data.title;
+        document.getElementById('videoThumb').src = data.thumbnail;
+        document.getElementById('videoDuration').innerText = data.duration;
+        
+        const select = document.getElementById('formatSelect');
+        select.innerHTML = '';
+
+        data.formats.forEach(f => {
+            const option = document.createElement('option');
+            option.value = f.format_id;
+            option.setAttribute('data-type', f.type);
+            const icon = f.type === 'audio' ? '🎵' : '🎬';
+            option.text = `${icon} [${f.type.toUpperCase()}] ${f.resolution} — ${f.note}`;
+            select.appendChild(option);
+        });
+
+        document.getElementById('infoBox').style.display = 'block';
+    } catch (err) {
+        document.getElementById('loadingMsg').style.display = 'none';
+        alert('Erro de conexão com o servidor.');
+        console.error(err);
+    }
+}
+
+async function startDownload() {
+    const select = document.getElementById('formatSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (!selectedOption) {
+        alert('Selecione um formato primeiro.');
+        return;
+    }
+
+    const formatId = selectedOption.value;
+    const type = selectedOption.getAttribute('data-type');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const btnText = document.getElementById('btnText');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressStatus = document.getElementById('progressStatus');
+    
+    downloadBtn.disabled = true;
+    btnText.innerText = 'Baixando...';
+    progressContainer.style.display = 'block';
+    
+    let progress = 10;
+    progressBarFill.style.width = progress + '%';
+    progressPercent.innerText = progress + '%';
+    progressStatus.innerText = 'Baixando do YouTube e convertendo...';
+
+    const interval = setInterval(() => {
+        if (progress < 90) {
+            progress += 3;
+            progressBarFill.style.width = progress + '%';
+            progressPercent.innerText = progress + '%';
+        }
+    }, 200);
+
+    try {
+        const response = await fetch('/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                url: currentUrl,
+                format_id: formatId,
+                type: type
+            })
+        });
+
+        clearInterval(interval);
+
+        if (response.ok) {
+            const disposition = response.headers.get('content-disposition');
+            let filename = type === 'audio' ? 'audio.mp3' : 'video.mp4';
+            
+            if (disposition && disposition.includes("UTF-8''")) {
+                filename = decodeURIComponent(disposition.split("UTF-8''")[1]);
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+
+            progressBarFill.style.width = '100%';
+            progressPercent.innerText = '100%';
+            progressStatus.innerText = 'Download concluído com sucesso!';
+            
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                downloadBtn.disabled = false;
+                btnText.innerText = 'Baixar Arquivo Agora';
+            }, 2000);
+        } else {
+            progressContainer.style.display = 'none';
+            const errData = await response.json();
+            alert('Erro ao realizar o download: ' + (errData.error || 'Desconhecido'));
+            downloadBtn.disabled = false;
+            btnText.innerText = 'Baixar Arquivo Agora';
+        }
+    } catch (err) {
+        clearInterval(interval);
+        progressContainer.style.display = 'none';
+        alert('Erro ao processar a requisição.');
+        console.error(err);
+        downloadBtn.disabled, downloadBtn.disabled = false;
+        btnText.innerText = 'Baixar Arquivo Agora';
+    }
+}
+</script>
+
+</body>
+</html>
