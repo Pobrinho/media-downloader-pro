@@ -11,6 +11,9 @@ app = Flask(__name__)
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
+# Caminho absoluto para o ficheiro de cookies
+COOKIE_PATH = os.path.abspath('cookies.txt')
+
 def limpar_pasta_downloads():
     try:
         for f in os.listdir(DOWNLOAD_FOLDER):
@@ -42,13 +45,17 @@ def get_info():
         'extract_flat': False,
         'no_warnings': True,
         'ffmpeg_location': FFMPEG_PATH,
-        'cookiefile': 'cookies.txt',
         'extractor_args': {
             'youtube': {
                 'player_client': ['android', 'web']
             }
         }
     }
+
+    # Só aplica os cookies se o ficheiro existir na raiz
+    if os.path.exists(COOKIE_PATH):
+        ydl_opts['cookiefile'] = COOKIE_PATH
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -84,7 +91,6 @@ def download():
             'format': 'bestaudio/best',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'cookiefile': 'cookies.txt',
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
@@ -101,7 +107,6 @@ def download():
             'format': 'bv*+ba/b',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'cookiefile': 'cookies.txt',
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
@@ -109,6 +114,9 @@ def download():
             },
             'merge_output_format': 'mp4'
         }
+
+    if os.path.exists(COOKIE_PATH):
+        ydl_opts['cookiefile'] = COOKIE_PATH
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
