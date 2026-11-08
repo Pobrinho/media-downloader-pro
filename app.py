@@ -11,7 +11,6 @@ app = Flask(__name__)
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Função para limpar arquivos antigos da pasta de downloads
 def limpar_pasta_downloads():
     try:
         for f in os.listdir(DOWNLOAD_FOLDER):
@@ -53,37 +52,10 @@ def get_info():
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-            
-            formats = []
-            for f in info.get('formats', []):
-                vcodec = f.get('vcodec')
-                acodec = f.get('acodec')
-                ext = f.get('ext')
-                format_note = f.get('format_note', '')
-                
-                if vcodec == 'none' and acodec != 'none':
-                    formats.append({
-                        'format_id': f.get('format_id'),
-                        'type': 'audio',
-                        'ext': ext,
-                        'resolution': f'Áudio ({f.get("abr", "N/A")} kbps)',
-                        'note': f'Áudio puro ({ext})'
-                    })
-                elif vcodec != 'none':
-                    res = f"{f.get('height', 'N/A')}p" if f.get('height') else 'Vídeo'
-                    formats.append({
-                        'format_id': f.get('format_id'),
-                        'type': 'video',
-                        'ext': ext,
-                        'resolution': res,
-                        'note': f"{format_note} ({ext})"
-                    })
-
             return jsonify({
                 'title': info.get('title'),
                 'thumbnail': info.get('thumbnail'),
-                'duration': info.get('duration_string', 'Desconhecida'),
-                'formats': formats
+                'duration': info.get('duration_string', 'Desconhecida')
             })
     except Exception as e:
         print(f"Erro no backend (get_info): {str(e)}")
@@ -95,10 +67,10 @@ def download():
 
     data = request.json
     url = data.get('url')
-    download_type = data.get('type')  # 'video' ou 'audio'
+    download_type = data.get('type', 'video')  # 'video' ou 'audio'
 
     if not url:
-        return jsonify({'error': 'Parâmetros ausentes'}), 400
+        return jsonify({'error': 'URL inválida'}), 400
 
     if '&' in url:
         url = url.split('&')[0]
@@ -126,7 +98,7 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': 'bv*+ba/b',  # Seleção automática segura do melhor vídeo + melhor áudio
+            'format': 'bv*+ba/b',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': 'cookies.txt',
@@ -164,5 +136,4 @@ def download():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 
-# Obrigatório para o Render / Gunicorn detetar a aplicação Flask corretamente
 hugs_app = app
