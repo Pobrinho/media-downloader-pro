@@ -43,6 +43,7 @@ def get_info():
         'extract_flat': False,
         'no_warnings': True,
         'ffmpeg_location': FFMPEG_PATH,
+        'cookiefile': 'cookies.txt',  # Solução definitiva para evitar bloqueio anti-bot
         'extractor_args': {
             'youtube': {
                 'player_client': ['android', 'web']
@@ -112,6 +113,7 @@ def download():
             'format': format_id,
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'cookiefile': 'cookies.txt',  # Solução definitiva para o download
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
@@ -128,6 +130,7 @@ def download():
             'format': f"{format_id}+bestaudio/best",
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'cookiefile': 'cookies.txt',  # Solução definitiva para o download
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
