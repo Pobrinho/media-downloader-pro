@@ -91,7 +91,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Efeito Animado Exclusivo para o Título */
         .header h1 {
             font-size: 32px;
             font-weight: 900;
@@ -109,7 +108,8 @@
             to { background-position: 300% center; }
         }
 
-        .header p { color: var(--text-sub); font-size: 14px; font-weight: 400; }
+        .header p { color: var(--text-sub); font-size: 14px; font-weight: 400; margin-bottom: 4px; }
+        .header p.author { color: var(--accent-green); font-weight: 600; font-size: 13px; }
 
         .search-box {
             position: relative;
@@ -279,7 +279,8 @@
                 <i class="fa-brands fa-youtube logo-icon"></i>
             </div>
             <h1>Media Downloader Pro</h1>
-            <p>Baixe vídeos e áudios com nome automático e status em tempo real<p>Fabiio_Rodrighues</p>
+            <p>Baixe vídeos e áudios com nome automático e status em tempo real</p>
+            <p class="author">Fabiio_Rodrighues</p>
         </div>
 
         <div class="search-box">
@@ -312,9 +313,12 @@
             </div>
             
             <div class="form-group">
-                <label for="formatSelect"><i class="fa-solid fa-sliders"></i> Selecione o Formato e Qualidade:</label>
+                <label for="formatSelect"><i class="fa-solid fa-sliders"></i> Selecione o Formato:</label>
                 <div class="select-wrapper">
-                    <select id="formatSelect"></select>
+                    <select id="formatSelect">
+                        <option value="video">🎬 Vídeo Completo (MP4 / Alta Qualidade)</option>
+                        <option value="audio">🎵 Apenas Áudio (MP3 / 192kbps)</option>
+                    </select>
                 </div>
             </div>
 
@@ -383,18 +387,6 @@ async function fetchInfo() {
         document.getElementById('videoThumb').src = data.thumbnail;
         document.getElementById('videoDuration').innerText = data.duration;
         
-        const select = document.getElementById('formatSelect');
-        select.innerHTML = '';
-
-        data.formats.forEach(f => {
-            const option = document.createElement('option');
-            option.value = f.format_id;
-            option.setAttribute('data-type', f.type);
-            const icon = f.type === 'audio' ? '🎵' : '🎬';
-            option.text = `${icon} [${f.type.toUpperCase()}] ${f.resolution} — ${f.note}`;
-            select.appendChild(option);
-        });
-
         document.getElementById('infoBox').style.display = 'block';
     } catch (err) {
         document.getElementById('loadingMsg').style.display = 'none';
@@ -405,15 +397,8 @@ async function fetchInfo() {
 
 async function startDownload() {
     const select = document.getElementById('formatSelect');
-    const selectedOption = select.options[select.selectedIndex];
+    const downloadType = select.value; // 'video' ou 'audio'
     
-    if (!selectedOption) {
-        alert('Selecione um formato primeiro.');
-        return;
-    }
-
-    const formatId = selectedOption.value;
-    const type = selectedOption.getAttribute('data-type');
     const downloadBtn = document.getElementById('downloadBtn');
     const btnText = document.getElementById('btnText');
     const progressContainer = document.getElementById('progressContainer');
@@ -436,7 +421,7 @@ async function startDownload() {
             progressBarFill.style.width = progress + '%';
             progressPercent.innerText = progress + '%';
         }
-    }, 200);
+    }, 300);
 
     try {
         const response = await fetch('/download', {
@@ -444,8 +429,7 @@ async function startDownload() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 url: currentUrl,
-                format_id: formatId,
-                type: type
+                type: downloadType
             })
         });
 
@@ -453,7 +437,7 @@ async function startDownload() {
 
         if (response.ok) {
             const disposition = response.headers.get('content-disposition');
-            let filename = type === 'audio' ? 'audio.mp3' : 'video.mp4';
+            let filename = downloadType === 'audio' ? 'audio.mp3' : 'video.mp4';
             
             if (disposition && disposition.includes("UTF-8''")) {
                 filename = decodeURIComponent(disposition.split("UTF-8''")[1]);
@@ -490,7 +474,7 @@ async function startDownload() {
         progressContainer.style.display = 'none';
         alert('Erro ao processar a requisição.');
         console.error(err);
-        downloadBtn.disabled, downloadBtn.disabled = false;
+        downloadBtn.disabled = false;
         btnText.innerText = 'Baixar Arquivo Agora';
     }
 }
