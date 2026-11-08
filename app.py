@@ -43,7 +43,7 @@ def get_info():
         'extract_flat': False,
         'no_warnings': True,
         'ffmpeg_location': FFMPEG_PATH,
-        'cookiefile': 'cookies.txt',  # Solução definitiva para evitar bloqueio anti-bot
+        'cookiefile': 'cookies.txt',
         'extractor_args': {
             'youtube': {
                 'player_client': ['android', 'web']
@@ -95,10 +95,9 @@ def download():
 
     data = request.json
     url = data.get('url')
-    format_id = data.get('format_id')
-    download_type = data.get('type')
+    download_type = data.get('type')  # 'video' ou 'audio'
 
-    if not url or not format_id:
+    if not url:
         return jsonify({'error': 'Parâmetros ausentes'}), 400
 
     if '&' in url:
@@ -110,10 +109,10 @@ def download():
     
     if download_type == 'audio':
         ydl_opts = {
-            'format': format_id,
+            'format': 'bestaudio/best',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'cookiefile': 'cookies.txt',  # Solução definitiva para o download
+            'cookiefile': 'cookies.txt',
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
@@ -127,10 +126,10 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': f"{format_id}+bestaudio/best",
+            'format': 'bv*+ba/b',  # Seleção automática segura do melhor vídeo + melhor áudio
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'cookiefile': 'cookies.txt',  # Solução definitiva para o download
+            'cookiefile': 'cookies.txt',
             'extractor_args': {
                 'youtube': {
                     'player_client': ['android', 'web']
