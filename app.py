@@ -1,8 +1,26 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import requests
+import yt_dlp
+import imageio_ffmpeg
+from urllib.parse import quote
+
+# Configuração do caminho do FFmpeg
+FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
 
 app = Flask(__name__)
+DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
+os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
+
+# Função para limpar arquivos antigos
+def limpar_pasta_downloads():
+    try:
+        for f in os.listdir(DOWNLOAD_FOLDER):
+            file_path = os.path.join(DOWNLOAD_FOLDER, f)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+    except Exception as e:
+        print(f"Erro na limpeza automática: {e}")
 
 @app.route('/')
 def index():
@@ -16,31 +34,45 @@ def get_info():
     if not url:
         return jsonify({'error': 'URL inválida'}), 400
 
-    # Limpeza básica da URL
     if '&' in url:
         url = url.split('&')[0]
 
     try:
-        # Como estamos a usar uma arquitetura limpa, devolvemos opções diretas e universais
-        # A API externa ou o motor externo fará o processamento pesado no momento do redirecionamento
+        # Extração leve apenas para pegar o título real e a miniatura
+        ydl_opts = {'quiet': True, 'skip_download': True}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            title = info.get('title', 'Vídeo do YouTube')
+
         formats = [
             {'format_id': 'mp4', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (MP4)', 'note': 'Vídeo + Áudio'},
             {'format_id': 'mp3', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Apenas Áudio (MP3)', 'note': 'Conversão direta'}
         ]
 
         return jsonify({
-            'title': 'Vídeo do YouTube',
-            'thumbnail': f"https://img.youtube.com/vi/{url.split('/')[-1].split('?')[0]}/hqdefault.jpg",
-            'duration': 'Disponível',
+            'title': title,
+            'thumbnail': info.get('thumbnail', ''),
+            'duration': info.get('duration_string', 'Desconhecida'),
             'formats': formats,
             'source_url': url
         })
     except Exception as e:
-        print(f"Erro em get_info: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        # Fallback caso o yt-dlp dê bloqueio pontual na extração de título
+        return jsonify({
+            'title': 'Vídeo do YouTube',
+            'thumbnail': '',
+            'duration': 'Disponível',
+            'formats': [
+                {'format_id': 'mp4', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (MP4)', 'note': 'Vídeo + Áudio'},
+                {'format_id': 'mp3', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Apenas Áudio (MP3)', 'note': 'Conversão direta'}
+            ],
+            'source_url': url
+        })
 
 @app.route('/download', methods=['POST'])
 def download():
+    limpar_pasta_downloads()
+
     data = request.json
     url = data.get('url')
     download_type = data.get('type') # 'video' ou 'audio'
@@ -49,22 +81,45 @@ def download():
         return jsonify({'error': 'URL ausente'}), 400
 
     try:
-        # Aqui integras o endpoint de uma API de extração externa e estável (ex: Cobalt API pública)
-        # Ou redirecionas o utilizador de forma inteligente para um serviço de download integrado.
+        output_template = os.path.join(DOWNLOAD_FOLDER, '%(title)s.%(ext)s')
         
-        # Exemplo de payload para uma API de extração externa:
-        api_payload = {
-            "url": url,
-            "vQuality": "1080",
-            "audioFormat": "mp3" if download_type == 'audio' else "best"
-        }
-        
-        # Pode ligar a uma API pública de parceiros ou retornar sucesso para o front-end abrir o link direto
-        return jsonify({
-            'success': True, 
-            'download_url': url,
-            'message': 'Link processado com sucesso pela arquitetura externa!'
-        })
+        # Opção otimizada de download pontual
+        if download_type == 'audio':
+            ydl_opts = {
+                'format': 'bestaudio',
+                'outtmpl': output_template,
+                'ffmpeg_location': FFMPEG_PATH,
+                'postprocessors': [{
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }],
+            }
+        else:
+            ydl_opts = {
+                'format': 'bestvideo+bestaudio/best',
+                'outtmpl': output_template,
+                'ffmpeg_location': FFMPEG_PATH,
+                'merge_output_format': 'mp4'
+            }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+            
+            if download_type == 'audio':
+                filename = os.path.splitext(filename)[0] + '.mp3'
+            elif not filename.endswith('.mp4'):
+                filename = os.path.splitext(filename)[0] + '.mp4'
+
+            base_filename = os.path.basename(filename)
+            safe_filename = base_filename.encode('ascii', 'ignore').decode('ascii')
+            if not safe_filename.strip():
+                safe_filename = "download_media.mp3" if download_type == 'audio' else "download_media.mp4"
+
+            response = send_file(filename, as_attachment=True)
+            response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(safe_filename)}"
+            return response
 
     except Exception as e:
         print(f"Erro no download: {str(e)}")
