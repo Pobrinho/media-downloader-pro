@@ -4,8 +4,9 @@ import yt_dlp
 import imageio_ffmpeg
 from urllib.parse import quote
 
-# Configuração do caminho do FFmpeg
+# Configuração do caminho do FFmpeg e dos Cookies
 FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
+COOKIES_PATH = os.path.join(os.getcwd(), 'www.youtube.com_cookies.txt')
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
@@ -42,7 +43,8 @@ def get_info():
         'quiet': True,
         'extract_flat': False,
         'no_warnings': True,
-        'ffmpeg_location': FFMPEG_PATH
+        'ffmpeg_location': FFMPEG_PATH,
+        'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -107,6 +109,7 @@ def download():
             'format': format_id,
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -118,6 +121,7 @@ def download():
             'format': f"{format_id}+bestaudio/best",
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
+            'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
             'merge_output_format': 'mp4'
         }
 
