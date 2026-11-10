@@ -144,9 +144,8 @@ def download():
         print(f"Erro no download: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
-    hugs_app = app
+# Variável exposta corretamente para o Gunicorn
+hugs_app = app
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5000)
