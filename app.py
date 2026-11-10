@@ -4,9 +4,8 @@ import yt_dlp
 import imageio_ffmpeg
 from urllib.parse import quote
 
-# Configuração do caminho do FFmpeg e dos Cookies
-FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
-COOKIES_PATH = os.path.join(os.getcwd(), 'www.youtube.com_cookies.txt')
+# Configuração robusta do caminho dos Cookies
+COOKIES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'www.youtube.com_cookies.txt')
 
 app = Flask(__name__)
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
