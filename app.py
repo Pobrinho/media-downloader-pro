@@ -11,9 +11,7 @@ app = Flask(__name__)
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), 'downloads')
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
-# Caminho absoluto para o ficheiro de cookies
-COOKIE_PATH = os.path.abspath('cookies.txt')
-
+# Função para limpar arquivos antigos da pasta de downloads
 def limpar_pasta_downloads():
     try:
         for f in os.listdir(DOWNLOAD_FOLDER):
@@ -44,25 +42,42 @@ def get_info():
         'quiet': True,
         'extract_flat': False,
         'no_warnings': True,
-        'ffmpeg_location': FFMPEG_PATH,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['android', 'web']
-            }
-        }
+        'ffmpeg_location': FFMPEG_PATH
     }
-
-    # Só aplica os cookies se o ficheiro existir na raiz
-    if os.path.exists(COOKIE_PATH):
-        ydl_opts['cookiefile'] = COOKIE_PATH
-
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            
+            formats = []
+            for f in info.get('formats', []):
+                vcodec = f.get('vcodec')
+                acodec = f.get('acodec')
+                ext = f.get('ext')
+                format_note = f.get('format_note', '')
+                
+                if vcodec == 'none' and acodec != 'none':
+                    formats.append({
+                        'format_id': f.get('format_id'),
+                        'type': 'audio',
+                        'ext': ext,
+                        'resolution': f'Áudio ({f.get("abr", "N/A")} kbps)',
+                        'note': f'Áudio puro ({ext})'
+                    })
+                elif vcodec != 'none':
+                    res = f"{f.get('height', 'N/A')}p" if f.get('height') else 'Vídeo'
+                    formats.append({
+                        'format_id': f.get('format_id'),
+                        'type': 'video',
+                        'ext': ext,
+                        'resolution': res,
+                        'note': f"{format_note} ({ext})"
+                    })
+
             return jsonify({
                 'title': info.get('title'),
                 'thumbnail': info.get('thumbnail'),
-                'duration': info.get('duration_string', 'Desconhecida')
+                'duration': info.get('duration_string', 'Desconhecida'),
+                'formats': formats
             })
     except Exception as e:
         print(f"Erro no backend (get_info): {str(e)}")
@@ -74,10 +89,11 @@ def download():
 
     data = request.json
     url = data.get('url')
-    download_type = data.get('type', 'video')  # 'video' ou 'audio'
+    format_id = data.get('format_id')
+    download_type = data.get('type')
 
-    if not url:
-        return jsonify({'error': 'URL inválida'}), 400
+    if not url or not format_id:
+        return jsonify({'error': 'Parâmetros ausentes'}), 400
 
     if '&' in url:
         url = url.split('&')[0]
@@ -88,14 +104,9 @@ def download():
     
     if download_type == 'audio':
         ydl_opts = {
-            'format': 'bestaudio/best',
+            'format': format_id,
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android', 'web']
-                }
-            },
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
@@ -104,19 +115,11 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': 'bv*+ba/b',
+            'format': f"{format_id}+bestaudio/best",
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['android', 'web']
-                }
-            },
             'merge_output_format': 'mp4'
         }
-
-    if os.path.exists(COOKIE_PATH):
-        ydl_opts['cookiefile'] = COOKIE_PATH
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -142,6 +145,8 @@ def download():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True, port=5000)
+    hugs_app = app
 
-hugs_app = app
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True, port=5000)
