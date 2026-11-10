@@ -39,22 +39,18 @@ def get_info():
     if '?' in url and 'watch?v=' not in url and 'youtu.be' in url:
         url = url.split('?')[0]
 
-    # Versão totalmente segura: apenas extrai o título e a thumb usando o cookie sem quebrar em formatos específicos
+    # Opções ultra-simplificadas para evitar qualquer falha de formato na extração
     ydl_opts = {
-        'quiet': True,
-        'no_warnings': True,
+        'skip_download': True,
         'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Pega apenas os metadados básicos sem forçar análise de formatos complexos
             info = ydl.extract_info(url, download=False)
             
-            # Formatos universais que funcionam sempre em qualquer vídeo do YouTube
             formats = [
-                {'format_id': 'bestvideo+bestaudio/best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (Vídeo + Áudio)', 'note': 'Melhor resolução'},
-                {'format_id': 'best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Qualidade Padrão', 'note': 'Automático'},
-                {'format_id': 'bestaudio', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Apenas Áudio', 'note': 'Conversão MP3'}
+                {'format_id': 'best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (MP4)', 'note': 'Vídeo + Áudio'},
+                {'format_id': 'bestaudio', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Apenas Áudio (MP3)', 'note': 'Conversão de Áudio'}
             ]
 
             return jsonify({
@@ -100,7 +96,7 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
+            'format': 'best',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
