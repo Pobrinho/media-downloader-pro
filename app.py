@@ -39,26 +39,27 @@ def get_info():
     if '?' in url and 'watch?v=' not in url and 'youtu.be' in url:
         url = url.split('?')[0]
 
+    # Versão totalmente segura: apenas extrai o título e a thumb usando o cookie sem quebrar em formatos específicos
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'ffmpeg_location': FFMPEG_PATH,
         'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Pega apenas os metadados básicos sem forçar análise de formatos complexos
             info = ydl.extract_info(url, download=False)
             
-            # Opções padrão seguras e robustas para o usuário escolher sem erro de formato
+            # Formatos universais que funcionam sempre em qualquer vídeo do YouTube
             formats = [
-                {'format_id': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (MP4)', 'note': 'Vídeo + Áudio'},
+                {'format_id': 'bestvideo+bestaudio/best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (Vídeo + Áudio)', 'note': 'Melhor resolução'},
                 {'format_id': 'best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Qualidade Padrão', 'note': 'Automático'},
-                {'format_id': 'bestaudio/best', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Áudio (MP3 192kbps)', 'note': 'Apenas Áudio'}
+                {'format_id': 'bestaudio', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Apenas Áudio', 'note': 'Conversão MP3'}
             ]
 
             return jsonify({
-                'title': info.get('title'),
-                'thumbnail': info.get('thumbnail'),
+                'title': info.get('title', 'Vídeo do YouTube'),
+                'thumbnail': info.get('thumbnail', ''),
                 'duration': info.get('duration_string', 'Desconhecida'),
                 'formats': formats
             })
@@ -75,7 +76,7 @@ def download():
     format_id = data.get('format_id')
     download_type = data.get('type')
 
-    if not url or not format_id:
+    if not url:
         return jsonify({'error': 'Parâmetros ausentes'}), 400
 
     if '&' in url:
@@ -87,7 +88,7 @@ def download():
     
     if download_type == 'audio':
         ydl_opts = {
-            'format': format_id if format_id != 'best' else 'bestaudio/best',
+            'format': 'bestaudio',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
@@ -99,7 +100,7 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': format_id,
+            'format': 'bestvideo+bestaudio/best',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
