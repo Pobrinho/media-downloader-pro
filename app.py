@@ -41,7 +41,6 @@ def get_info():
 
     ydl_opts = {
         'quiet': True,
-        'extract_flat': False,
         'no_warnings': True,
         'ffmpeg_location': FFMPEG_PATH,
         'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None
@@ -50,48 +49,12 @@ def get_info():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            formats = []
-            seen_res = set()
-            
-            for f in info.get('formats', []):
-                vcodec = f.get('vcodec', 'none')
-                acodec = f.get('acodec', 'none')
-                ext = f.get('ext')
-                format_note = f.get('format_note', '')
-                
-                # Filtrar apenas áudios úteis
-                if vcodec == 'none' and acodec != 'none':
-                    abr = f.get('abr', 'N/A')
-                    formats.append({
-                        'format_id': f.get('format_id'),
-                        'type': 'audio',
-                        'ext': ext,
-                        'resolution': f'Áudio ({abr} kbps)',
-                        'note': f'Áudio puro ({ext})'
-                    })
-                # Filtrar vídeos válidos com resolução
-                elif vcodec != 'none' and f.get('height'):
-                    height = f.get('height')
-                    res = f"{height}p"
-                    if res not in seen_res and ext in ['mp4', 'webm']:
-                        seen_res.add(res)
-                        formats.append({
-                            'format_id': f.get('format_id'),
-                            'type': 'video',
-                            'ext': ext,
-                            'resolution': res,
-                            'note': f"{format_note or 'Vídeo'} ({ext})"
-                        })
-
-            # Fallback seguro caso nenhum formato específico seja mapeado
-            if not formats:
-                formats.append({
-                    'format_id': 'best',
-                    'type': 'video',
-                    'ext': 'mp4',
-                    'resolution': 'Melhor Qualidade',
-                    'note': 'Automático (mp4)'
-                })
+            # Opções padrão seguras e robustas para o usuário escolher sem erro de formato
+            formats = [
+                {'format_id': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Alta Qualidade (MP4)', 'note': 'Vídeo + Áudio'},
+                {'format_id': 'best', 'type': 'video', 'ext': 'mp4', 'resolution': 'Qualidade Padrão', 'note': 'Automático'},
+                {'format_id': 'bestaudio/best', 'type': 'audio', 'ext': 'mp3', 'resolution': 'Áudio (MP3 192kbps)', 'note': 'Apenas Áudio'}
+            ]
 
             return jsonify({
                 'title': info.get('title'),
@@ -124,7 +87,7 @@ def download():
     
     if download_type == 'audio':
         ydl_opts = {
-            'format': format_id,
+            'format': format_id if format_id != 'best' else 'bestaudio/best',
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
@@ -136,7 +99,7 @@ def download():
         }
     else:
         ydl_opts = {
-            'format': f"{format_id}+bestaudio/best" if format_id != 'best' else 'best',
+            'format': format_id,
             'outtmpl': output_template,
             'ffmpeg_location': FFMPEG_PATH,
             'cookiefile': COOKIES_PATH if os.path.exists(COOKIES_PATH) else None,
